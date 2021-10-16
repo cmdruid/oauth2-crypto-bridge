@@ -1,7 +1,6 @@
 {
   "name": "oauth2-crypto-bridge",
   "version": "0.0.1",
-  "private": false,
   "description": "An authentication bridge between OAuth2 gateways and crypto-currency wallets.",
   "repository": "https://github.com/cmdruid/oauth2-crypto-bridge.git",
   "main": "",
