@@ -1,16 +1,7 @@
-@import 'bulma/sass/form/_all.sass';
-@import 'bulma/sass/elements/_all.sass';
-@import 'bulma/sass/helpers/_all.sass';
-@import 'bulma/sass/utilities/_all.sass';
-@import 'bulma/sass/grid/_all.sass';
-@import 'bulma/sass/components/level.sass';
-
+@import './normalize.css';
 
 body {
   font-family: -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
-  padding: 0 1rem 1rem 1rem;
-  max-width: 680px;
-  margin: 0 auto;
   background: #fff;
   color: #333;
 }
@@ -25,14 +16,243 @@ a {
 }
 
 hr {
-  border: 1px solid #ddd;
+  border: 1px solid #333;
 }
 
-iframe {
-  background: #ccc;
-  border: 1px solid #ccc;
-  height: 10rem;
+select {
+  // A reset of styles, including removing the default dropdown arrow
+  appearance: none;
+  background-color: transparent;
+  border: none;
+  padding: 0 1em 0 0;
+  margin: 0;
   width: 100%;
-  border-radius: .5rem;
-  filter: invert(1);
+  font-family: inherit;
+  font-size: inherit;
+  cursor: inherit;
+  line-height: inherit;
+  outline: none;
+
+  &::-ms-expand {
+    display: none;
+  }
+}
+
+select, .select:after {
+  grid-area: select;
+}
+
+.container {
+  padding: 0 1rem 1rem 1rem;
+  max-width: 680px;
+  margin: auto;
+}
+
+.block {
+  height: 100%;
+  margin: 1rem 0 1rem 0;
+}
+
+.center {
+  text-align: center;
+}
+
+.title {
+  font-family: Arial, Helvetica, sans-serif;
+  margin: 0 0 0.25rem 0;
+}
+
+.subtitle {
+  margin: 0;
+  font-weight: 300;
+  color: rgb(85, 85, 85);
+}
+
+.tiles {
+  margin-bottom: 1rem;
+  display: flex;
+  gap: 1rem;
+  flex-direction: column;
+  align-items: center;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: space-evenly;
+  }
+}
+
+.tile {
+  flex: 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+
+  h2, label {
+    text-align: center;
+  }
+}
+
+.card {
+  flex: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  min-height: 6rem;
+  margin: 1rem;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  background-color: var(--card-color);
+}
+
+.token {
+  width: 100%;
+
+  h1, h2, h3, h4, p {
+    margin: 0;
+    padding: 0.25rem;
+    border-radius: 5px 5px 0 0;
+    color: whitesmoke;
+    background-color: var(--card-color);
+    text-align: center;
+    font-weight: bold;
+  }
+
+  pre {
+    margin: 0;
+    padding: 0.5rem;
+    background-color: whitesmoke;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    border-radius: 0 0 5px 5px;
+    width: 100%;
+  }
+}
+
+.header {
+  @media (min-width: 500px) {
+    display: flex;
+    justify-content: flex-start;
+    gap: 0.75rem;
+  }
+
+  figure {
+    margin: 0;
+    min-width: 5rem;
+  }
+
+  img {
+    width: 5rem;
+    border-radius: 1rem;
+  }
+}
+
+.info {
+  text-align: center;
+  color: whitesmoke;
+  margin: auto 0;
+  overflow: hidden;
+
+  @media (min-width: 500px) {
+    text-align: left;
+  }
+
+  h3, p {
+    margin: 0;
+  }
+}
+
+.dropdown {
+  margin: 0.5rem;
+
+  label {
+    margin-bottom: 0.5rem;
+  }
+}
+
+.select {
+  display: grid;
+  grid-template-areas: "select";
+  margin: 0.5rem auto;
+  max-width: 8rem;
+  text-align: center;
+  border: 2px solid var(--select-border);
+  border-radius: 0.25em;
+  padding: 0.25em 0.5em;
+  cursor: pointer;
+  background-color: #fff;
+  background-image: linear-gradient(to top, #f9f9f9, #fff 33%);
+  align-items: center;
+  opacity: .9;
+  transition: 0.5s;
+  
+  &:after {
+    justify-self: end;
+  }
+
+  &::after {
+    content: "";
+    width: 0.8em;
+    height: 0.5em;
+    background-color: var(--select-arrow);
+    clip-path: polygon(100% 0%, 0 0%, 50% 100%);
+  }
+
+  &:hover {
+    opacity: 1;
+    cursor: pointer;
+  }
+
+  &:focus-within {
+    border: 2px solid var(--select-focus);
+    border-radius: 0.25em;
+  }
+}
+
+button {
+  flex: 0;
+  font-size: medium;
+  margin: 0.5rem;
+  padding: 0.5rem;
+  opacity: 0.8;
+  background-color: white;
+  border: 2px solid #333;
+  border-radius: 5px;
+  transition: 0.5s;
+
+  &:hover {
+    opacity: 1;
+    cursor: pointer;
+  }
+
+  &[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  } 
+
+}
+
+.white {
+  color: whitesmoke;
+}
+
+.bg-blue {
+  background-color: #496aff;
+}
+
+.bg-green {
+  background-color: #2dd18d;
+}
+
+:root {
+  --select-border: #777;
+  --select-focus: blue;
+  --select-arrow: var(--select-border);
+  --card-color: #3a51bb
+}
+
+*, *:after, *:before {
+  box-sizing: border-box;
 }
