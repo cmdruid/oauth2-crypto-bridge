@@ -1,16 +1,16 @@
 import type { AppProps } from 'next/app'
-import { Provider } from 'next-auth/client'
+import { SWRConfig } from 'swr'
 import './styles.scss'
-
-export const wallet = { ethereum: null, accounts: null };
 
 export default function App ({ Component, pageProps }: AppProps) {
   return (
-    <Provider
-      options={{ clientMaxAge: 60, keepAlive: 0 }}
-      session={pageProps.session}
+    <SWRConfig 
+      value={{
+        // refreshInterval: 3000,
+        fetcher: (resource, init) => fetch(resource, init).then(res => res.json())
+      }}
     >
       <Component {...pageProps} />
-    </Provider>
+    </SWRConfig>
   )
 }

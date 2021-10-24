@@ -1,28 +1,30 @@
-import { useState, useEffect, JSXElementConstructor } from 'react';
-import { signIn, signOut } from 'next-auth/client'
+import Router from 'next/router';
+import useSWR from 'swr';
+import { useState, useEffect } from 'react';
 
 const CONNECT_TEXT   = 'Sign In',
       CONNECTED_TEXT = (provider: string) => `Sign Out of ${provider}`;
 
-function LoginTile({ session }: LoginTileProps) {
-  const [ buttonText, setButtonText ] = useState(CONNECT_TEXT);
-  const [ provider, setProvider ]     = useState('Discord');
+function LoginTile() {
+  const [ buttonText, setButtonText ] = useState(CONNECT_TEXT),
+        [ provider, setProvider ]     = useState('Discord');
+
+  const { data: user, error } = useSWR('api/session?key=user');
 
   useEffect(() => {
-    const hasSession = Boolean(session);
-    switch (true) {
-      case hasSession:
-        setButtonText(CONNECTED_TEXT(provider));
-        break;
-      default:
-        setButtonText(CONNECT_TEXT);
-    }
-  }, [ session ]);
+    if (!user)  setButtonText(CONNECT_TEXT);
+    if (!!user) setButtonText(CONNECTED_TEXT(provider));
+  }, [ user ]);
 
-  function onClick() {
-    if (!session) {
-      signIn(provider.toLowerCase());
-    } else { signOut(); }
+  async function onClick() {
+    if (!user) {
+      const buff  = crypto.getRandomValues(new Uint8Array(16)),
+            state = Buffer.from(buff).toString('base64').replace(/[^\w]/g, '');
+      fetch(`api/auth/${provider.toLowerCase()}?state=${state}`)
+        .then(res => res.text())
+        .then(txt => Router.push(txt))
+        .catch(err => console.error(err));
+    } else { fetch('api/logout'); }
   }
 
   function onChange(e: any) {
@@ -31,7 +33,7 @@ function LoginTile({ session }: LoginTileProps) {
 
   return (
     <div className="tile bg-blue">
-      {!session &&
+      {!user &&
        <>
           <h2 className="white">
             Connect to an <br/>Oauth2 Provider
@@ -49,16 +51,16 @@ function LoginTile({ session }: LoginTileProps) {
           </div>
         </>
       }
-      {session &&
+      {user &&
         <div className="card">
           <div className="header">
             <figure className="pfp">
-              <img className="is-rounded" src={session?.user?.picture}/>
+              <img className="is-rounded" src={`https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`}/>
             </figure>
             <div className="info">
               <h3>{`Signed into ${provider}`}</h3>
-              <p>{session.user.name}</p>
-              <p>{session.user.email}</p>
+              <p>{(`${user.username}#${user.discriminator}`)}</p>
+              <p>{user.id}</p>
             </div>
           </div>
           <div className="content"></div>
@@ -69,10 +71,6 @@ function LoginTile({ session }: LoginTileProps) {
       </button>
     </div>
   );
-}
-
-type LoginTileProps = {
-  session: any
 }
 
 export default LoginTile;

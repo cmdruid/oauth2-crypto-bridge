@@ -1,22 +1,11 @@
 import type { NextPage } from 'next'
 
-import { useRouter }  from 'next/router'
-import { useSession } from 'next-auth/client'
-import { useState }   from 'react'
-
 import Layout     from '../components/layout'
 import LoginTile  from '../components/tiles/login'
 import WalletTile from '../components/tiles/wallet'
 import TokenTile  from '../components/tiles/token'
 
 const Page: NextPage = () => {
-
-  const [ session ] = useSession(),
-        [ account, setAccount ] = useState<string>();
-
-  const router = useRouter();
-  const { secret } = router.query;
-
   return (
     <Layout>
       <div className="container">
@@ -36,20 +25,11 @@ const Page: NextPage = () => {
         </div>
         <div className="block">
           <div className="tiles">
-            <LoginTile 
-              session={session}
-            />
-            <WalletTile 
-              account={account}
-              setAccount={setAccount}
-            />
+            <LoginTile />
+            <WalletTile />
           </div>
           <div className="tiles">
-            <TokenTile
-              account={account}
-              secret={secret}
-              session={session}
-            />
+            <TokenTile />
           </div>
         </div>
       </div>

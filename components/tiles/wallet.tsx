@@ -1,64 +1,72 @@
-import { useState, useEffect, useRef, SetStateAction } from 'react';
-import MetaMaskOnboarding from '@metamask/onboarding';
-import Image from 'next/image';
+import useSWR from 'swr';
+import Image  from 'next/image';
+import { useState, useEffect, useRef } from 'react';
 
-const ONBOARD_TEXT   = 'Click here to install MetaMask!',
+const MISSING_TEXT   = 'No Wallet Detected',
       CONNECT_TEXT   = 'Connect Wallet',
-      CONNECTED_TEXT = 'Wallet Connected';
+      VERIFY_TEXT    = 'Verify Wallet',
+      CONNECTED_TEXT = 'Connected & Verified';
 
-const NETWORKS = [ 
-  'Main', 'Test', 'Ropsten', 'Rinkeby', 'Goerli', 'Kovan'
-];
+const NETWORKS = [ 'Main', 'Test', 'Ropsten', 'Rinkeby', 'Goerli', 'Kovan' ];
+const SIGN_MSG = 'To prove ownership of your account, please sign this unique message';
 
-function handleError(error: any) {
-  if (error.code === 4001) {
-    console.log('Please connect to MetaMask.');
-  } else { console.error(error); }
-}
+function WalletTile() {
+  const [ buttonText, setText ]   = useState<string>(MISSING_TEXT);
+  const [ account, setAccount ]   = useState<string>();
 
-function getAccountString(account: string) : string {
-  return account.slice(0,6) + '...' + account.slice(-4);
-}
+  const { data: wallet, error } = useSWR('api/session?key=wallet');
 
-function WalletTile({ account, setAccount}: WalletTileProps) {
-  const [ buttonText, setButtonText ] = useState(ONBOARD_TEXT);
-
-  const onboarding = useRef<MetaMaskOnboarding>(),
-        ethereum   = useRef<any>(),
+  const ethereum   = useRef<any>(),
         network    = useRef<string>(),
-        isMetaMask = useRef<boolean>(),
         web3Loaded = useRef<boolean>(false);
 
   useEffect(() => {
-    if (!onboarding.current) {
-      onboarding.current = new MetaMaskOnboarding();
-    }
-    if (window?.ethereum) {
+    // Check for existing web3 client.
+    if (window?.ethereum && !ethereum.current) {
       const { ethereum: client } = window;
-      ethereum.current   = client;
-      network.current    = NETWORKS[parseInt(client.chainId) - 1];
-      isMetaMask.current = MetaMaskOnboarding.isMetaMaskInstalled();
+      ethereum.current = client;
+      network.current = NETWORKS[parseInt(client.chainId) - 1];
+      ethereum.current.autoRefreshOnNetworkChange = false;
+      setText(CONNECT_TEXT);
     }
-    if (isMetaMask.current) setButtonText(CONNECT_TEXT);
   }, []);
 
   useEffect(() => {
+    // Request account from web3 wallet.
     if (ethereum.current && !web3Loaded.current) {
       ethereum.current
         .request({ method: 'eth_requestAccounts' })
         .then(handleAccounts)
         .catch(handleError);
       registerEthEvents(ethereum);
-      ethereum.current.autoRefreshOnNetworkChange = false;
       web3Loaded.current = true;
     }
-    if (account) {
-      setButtonText(CONNECTED_TEXT);
-      onboarding.current?.stopOnboarding();
-    } else { setButtonText(CONNECT_TEXT); }
-  }, [ ethereum, account ]);
+  }, [ ethereum ]);
 
-  function handleAccounts(account: string | string[]) {
+  useEffect(() => {
+    // Handle button display text.
+    if (account) {
+      if (wallet) {
+        setText(CONNECTED_TEXT);
+      } else { setText(VERIFY_TEXT); }
+    } else { setText(CONNECT_TEXT); }
+  }, [ account, wallet ]);
+
+  const onClick = async () => {
+    // Handle button click logic.
+    if (ethereum.current && network.current) {
+      if (!account) {
+        ethereum.current
+          .request({ method: 'eth_requestAccounts' })
+          .then(handleAccounts)
+          .catch(handleError);
+      } else if (!wallet) {
+        verifyAccount(ethereum.current, account, network.current);
+      }
+    }
+  };
+
+  function handleAccounts(account: string | string[]) : void {
     if (account instanceof Array) {
       setAccount(account[0])
     } else { setAccount(account) }
@@ -75,15 +83,6 @@ function WalletTile({ account, setAccount}: WalletTileProps) {
       emitter.removeListener('chainChanged');
     };
   }
-
-  const onClick = () => {
-    if (isMetaMask.current && ethereum.current) {
-      ethereum.current
-        .request({ method: 'eth_requestAccounts' })
-        .then(handleAccounts)
-        .catch(handleError);
-    } else { onboarding.current?.startOnboarding(); }
-  };
 
   return (
     <div className="tile bg-green">
@@ -130,15 +129,41 @@ function WalletTile({ account, setAccount}: WalletTileProps) {
   );
 }
 
+function handleError(error: any) : void {
+  if (error.code === 4001) {
+    console.log('Please connect to MetaMask.');
+  } else { console.error(error); }
+}
+
+function getAccountString(account: string) : string {
+  return account.slice(0,6) + '...' + account.slice(-4);
+}
+
+async function verifyAccount(provider: any, acc: string, net: string) : Promise<boolean> {
+  const msg = `${SIGN_MSG}:\n${crypto.randomUUID()}`,
+        req = { method: 'personal_sign', params: [ msg, acc ] };
+  return provider.request(req)
+    .then((sig: string) => checkSignature(msg, acc, net, sig))
+    .catch(handleError);
+}
+
+async function checkSignature(msg: string, acc: string, net: string, sig: string) : Promise<boolean | void> {
+  const params = new URLSearchParams({ msg, acc, net, sig });
+  return fetch(`/api/verify?${params.toString()}`)
+    .then(res => res.ok)
+    .catch(handleError);
+}
+
 declare global {
   interface Window {
     ethereum:any;
   }
 }
 
-type WalletTileProps = {
-  account: string | undefined,
-  setAccount: any
+declare global {
+  interface Crypto {
+    randomUUID: Function;
+  }
 }
 
 export default WalletTile;
